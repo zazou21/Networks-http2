@@ -16,14 +16,20 @@ class HttpRequest:
         for line in header_lines:
            if line.strip() == "": 
                 break
-           if ":" in line:  # Ensure the line contains a colon
+           if ":" in line: 
                 key, value = line.split(":", 1)
                 self.headers[key.strip()] = value.strip()
 
         # Extract body if POST request
         if 'Content-Length' in self.headers:
             content_length = int(self.headers['Content-Length'])
-            self.body = lines[-1][:content_length]  # Body follows the headers
+            self.body = lines[-1][:content_length]  
+
+class HttpRequest2:
+    def __init__(self,method,path,body=None):
+        self.method=method
+        self.path=path
+        self.body=body
 
 
 class HttpResponse: 

@@ -13,7 +13,7 @@ def start_server():
     try:
         # Create a socket
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Reuse the address
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  
         server.bind((HOST, PORT))
         server.listen(5)
         print(f"Server started on {HOST}:{PORT}")
@@ -22,7 +22,7 @@ def start_server():
 
         while True:
             try:
-                # Accept new connections
+                
                 client_socket, client_address = server.accept()
                 print(f"New connection from {client_address}")    
                 # Handle each client in a new thread
