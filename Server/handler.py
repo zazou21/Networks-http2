@@ -339,12 +339,12 @@ def handle_http2(client_socket, client_address):
 
         print(f"Handling HTTP/2 connection from {client_address}")
 
-            # Send SETTINGS frame
-        settings_frame = b'\x00\x00\x00'  # Length: 0
+        settings_frame = b'\x00\x00\x05'  # Length: 5 bytes (size of the payload)
         settings_frame += b'\x04'         # Type: SETTINGS
         settings_frame += b'\x00'         # Flags
         settings_frame += b'\x00\x00\x00\x00'  # Stream ID: 0
-        client_socket.sendall(settings_frame)
+        settings_frame += b'\x01'         # SETTINGS_HEADER_TABLE_SIZE
+        settings_frame += b'\x00\x00\x00\x00'  # Value: 0 to disable dynamic table
         print("Sent SETTINGS frame")
         while(1):
             print(f"Handling HTTP/2 request from {client_address}")
@@ -377,8 +377,11 @@ def handle_http2(client_socket, client_address):
                 current_stream_id=frame.stream_id
                 print(f"Frame received: {frame}")
                 if frame.frame_type == 'HEADERS':
+
+                    
                     
                     headers = frame.payload
+                    print(f"Headers payload {headers}")
                     # print(f"payload without .hex() {headers}")
                     headers=decode_hpack(headers)
                     filtered_headers = [(name, value) for name, value in headers if name and value]
