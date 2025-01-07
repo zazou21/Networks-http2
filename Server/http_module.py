@@ -1,62 +1,59 @@
-class HttpRequest:
-    def __init__(self,request):
-        self.method=None
-        self.path = None
-        self.headers = {}
-        self.body = None
-        self.parse(request)
+from HPACK import *
 
-    def parse(self,request):
-        lines = request.split("\r\n")
-        # Parse method and path from request line (e.g., "POST / HTTP/1.1")
-        self.method, self.path, _ = lines[0].split(" ")
-        
-        # Parse headers
-        header_lines = lines[1:]
-        for line in header_lines:
-           if line.strip() == "": 
-                break
-           if ":" in line: 
-                key, value = line.split(":", 1)
-                self.headers[key.strip()] = value.strip()
-
-        # Extract body if POST request
-        if 'Content-Length' in self.headers:
-            content_length = int(self.headers['Content-Length'])
-            self.body = lines[-1][:content_length]  
 
 class HttpRequest2:
-    def __init__(self,method,path,body=None):
-        self.method=method
-        self.path=path
-        self.body=body
-
-
-class HttpResponse: 
-    def __init__(self, status_code, status_message):
-        self.status_code = status_code
-        self.status_message = status_message
-        self.headers = {}
-        self.body = ""
- 
-    def add_header(self, name, value):
-        self.headers[name] = value
-
-    def set_body(self, body):
+    def __init__(self, method, path, body=None):
+        self.method = method
+        self.path = path
         self.body = body
-        self.add_header("Content-Length", str(len(self.body)))
-
-    def format(self):
-        
-        response_line = f"HTTP/1.1 {self.status_code} {self.status_message}\r\n"
-        
-       
-        headers = "".join(f"{key}: {value}\r\n" for key, value in self.headers.items())
-        
-       
-        return response_line + headers + "\r\n" + self.body
-    
 
 
+def create_response_frame(headers, response_content, current_stream_id, dynamic_table):
 
-        
+    # Encode headers
+    encoded_headers = []
+    for name, value in headers:
+        encoded_headers.extend(encode_header(name, value, dynamic_table))
+
+    encoded_headers_bytes = bytes(encoded_headers)
+    print(encoded_headers_bytes)
+
+    # Prepare the headers frame
+    headers_frame = (
+        get_response_size(encoded_headers_bytes)  # Length of the encoded headers
+        + b"\x01"  # Type: HEADERS
+        + b"\x04"  # Flags: END_HEADERS
+        + current_stream_id.to_bytes(4, byteorder="big")  # request stream ID
+        + encoded_headers_bytes
+    )
+
+    # Encode the data payload
+    if isinstance(response_content, str):
+        data_payload = response_content.encode("utf-8")
+    else:
+        data_payload = response_content  # Already bytes
+
+    # Create the data frame
+    data_frame = (
+        len(data_payload).to_bytes(3, byteorder="big")  # Length of payload
+        + b"\x00"  # Type: DATA
+        + b"\x01"  # Flags: END_STREAM
+        + current_stream_id.to_bytes(4, byteorder="big")  # request stream ID
+        + data_payload
+    )
+
+    # Return the combined frames: headers frame followed by data frame
+    return headers_frame + data_frame
+
+
+def get_response_size(encoded_headers):
+    # Get the size of the encoded headers
+    header_size = len(encoded_headers)
+
+    # Ensure the size is within the 24-bit frame length (max 16,777,215 bytes)
+    if header_size > 16777215:
+        raise ValueError("Encoded headers size exceeds maximum allowed frame size")
+
+    # Return the size in the 3-byte format required for the frame header
+    # This is the length in big-endian byte order
+    return header_size.to_bytes(3, "big")

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update and Delete Example</title>
+</head>
+<body>
+    <h1>Update or Delete Name</h1>
+    
+    <!-- Update Form (PUT Request) -->
+    <form id="update-form">
+        <label for="name-update">Enter Name to Update:</label>
+        <input type="text" id="name-update" name="name" required>
+        <br><br>
+        <label for="new-name">Enter New Name:</label>
+        <input type="text" id="new-name" name="new_name" required>
+        <br><br>
+        <button type="button" onclick="sendPutRequest()">Update</button>
+    </form>
+
+    <br>
+
+    <!-- Delete Form (DELETE Request) -->
+    <form id="delete-form">
+        <label for="name-delete">Enter Name to Delete:</label>
+        <input type="text" id="name-delete" name="name" required>
+        <button type="button" onclick="sendDeleteRequest()">Delete</button>
+    </form>
+    <br>
+
+    <!-- Check Form (HEAD Request) -->
+    <form id="check-form">
+        <label for="name-check">Enter Name to Check:</label>
+        <input type="text" id="name-check" name="name" required>
+        <button type="button" id="check-button">Check</button>
+    </form>
+
+    <script>
+        // Function to send PUT request
+        function sendPutRequest() {
+            const name = document.getElementById('name-update').value;
+            const newName = document.getElementById('new-name').value;
+            const url = 'https://127.0.0.1:8085'; // Replace with your API endpoint
+
+            fetch(url, {
+                method: 'PUT',
+                body: JSON.stringify({ name: name, new_name: newName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Name updated successfully: ' + JSON.stringify(data));
+            })
+            .catch(error => {
+                alert('Error updating name: ' + error);
+            });
+        }
+
+        // Function to send DELETE request
+        function sendDeleteRequest() {
+            const name = document.getElementById('name-delete').value;
+            const url = `https://127.0.0.1:8085`; // Replace with your API endpoint
+
+            fetch(url, {
+                method: 'DELETE',
+                body: JSON.stringify({ name: name })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Name deleted successfully');
+                } else {
+                    alert('Error deleting name');
+                }
+            })
+            .catch(error => {
+                alert('Error deleting name: ' + error);
+            });
+        }
+
+        // Function to send HEAD request
+        function sendHeadRequest(event) {
+            event.preventDefault(); // Prevent default form submission
+            const fileName = document.getElementById('name-check').value;
+            const url = `https://127.0.0.1:8085/${encodeURIComponent(fileName)}`; // File name as part of the path
+
+            fetch(url, {
+                method: 'HEAD'
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert(`File exists. Status: ${response.status}`);
+                } else {
+                    alert(`File not found. Status: ${response.status}`);
+                }
+
+                // Log headers to the console
+                console.log('Headers:');
+                response.headers.forEach((value, key) => {
+                    console.log(`${key}: ${value}`);
+                });
+            })
+            .catch(error => {
+                alert('Error checking file: ' + error);
+            });
+        }
+
+        // Add event listener to the "Check" button
+        document.getElementById('check-button').addEventListener('click', sendHeadRequest);
+    </script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+Ezz Eldin Alaa Eldin Omar 21p0100 HANDLER module
+
+Mohamed Elbialy 21p0068 HPACK
+
+Mostafa Nasr 21p0230 Sessions and HTTP module and their usage
+
+Ahmed Khaled 21p0056 Server init and Frames and their usage
